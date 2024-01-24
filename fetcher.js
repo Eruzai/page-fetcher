@@ -1,5 +1,6 @@
 const request = require('request');
 const fs = require('fs');
+const constants = require('fs');
 const readline = require('readline');
 
 const pageToFetch = process.argv[2];
@@ -21,23 +22,20 @@ const writeFile = function (filePath, data) {
 const fetcher = function (URL, localFilePath) {
   request(URL, (error, response, body) => {
     if (error) {
-      console.log('error:', error); // Print the error if one occurred
-      console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+      console.log("Invalid URL", response); // If the URL doesn't work, prints a message to console.
+    } else {
+      fs.access(localFilePath, constants.F_OK, (err) => {
+        if (err) {
+          writeFile(localFilePath, body);
+        } else {
+          rl.question("🛑 The file exists at this location! Hit enter to cancel or enter 'Y' to overwrite. ", (answer) => {
+            if (answer.toUpperCase() === 'Y') {
+              writeFile(localFilePath, body);
+            }
+          });
+        }
+      });
     }
-    fs.realpath(localFilePath, (err) => {
-      if (err) {
-        writeFile(localFilePath, body);
-      } else {
-        rl.question("❌ The file exists in that location! Type Y followed by pressing the enter key to overwrite. ", (answer) => {
-          if (answer.toUpperCase() === "Y") {
-            writeFile(localFilePath, body);
-            rl.close();
-          } else {
-            rl.close();
-          }
-        })
-      }
-    })
   });
 };
 
